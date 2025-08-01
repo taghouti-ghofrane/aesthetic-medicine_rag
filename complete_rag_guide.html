@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Guide to RAG Systems</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #2c3e50;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav li {
+            margin: 0;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            display: block;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav a:hover {
+            background: #34495e;
+            border-bottom-color: #3498db;
+        }
+        
+        /* Content */
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 60px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 6px solid #3498db;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(45deg, #3498db, #8e44ad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 1.8em;
+            margin: 30px 0 15px 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .section h4 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+        }
+        
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 5px solid #3498db;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .card p {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        /* Tech badges */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .tech-badge {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        /* Architecture diagram */
+        .architecture {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .phase {
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 6px solid #e74c3c;
+        }
+        
+        .phase-indexing {
+            background: linear-gradient(135deg, #f8f5ff 0%, #f0e8ff 100%);
+            border-left-color: #9b59b6;
+        }
+        
+        .phase-retrieval {
+            background: linear-gradient(135deg, #f8fff8 0%, #e8ffe8 100%);
+            border-left-color: #27ae60;
+        }
+        
+        .phase-generation {
+            background: linear-gradient(135deg, #fffcf5 0%, #fff5e8 100%);
+            border-left-color: #f39c12;
+        }
+        
+        .phase h3 {
+            margin-bottom: 20px;
+            border: none;
+            padding: 0;
+        }
+        
+        /* Code blocks */
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #4a5568;
+            color: #e2e8f0;
+            padding: 5px 15px;
+            border-radius: 0 10px 0 10px;
+            font-size: 0.8em;
+        }
+        
+        /* Performance metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .metric {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Comparison table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        /* Highlight boxes */
+        .highlight {
+            background: linear-gradient(45deg, #ffeaa7, #fab1a0);
+            border: 2px solid #e17055;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .highlight h4 {
+            color: #2d3436;
+            margin-bottom: 15px;
+        }
+        
+        /* Flow arrows */
+        .flow-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #3498db;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* Best practices */
+        .best-practices {
+            background: linear-gradient(135d, #d1ecf1 0%, #bee5eb 100%);
+            border: 2px solid #17a2b8;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .best-practices ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .best-practices li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(23, 162, 184, 0.2);
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .best-practices li::before {
+            content: "✓";
+            color: #17a2b8;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Scroll to top */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .scroll-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🤖 Complete RAG Systems Guide</h1>
+            <p>Everything you need to know about Retrieval-Augmented Generation</p>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#indexing">Indexing</a></li>
+                <li><a href="#retriever">Retriever</a></li>
+                <li><a href="#generation">Generation</a></li>
+                <li><a href="#implementation">Implementation</a></li>
+                <li><a href="#optimization">Optimization</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Introduction -->
+            <section id="introduction" class="section">
+                <h2>🎯 What is RAG?</h2>
+                
+                <p><strong>Retrieval-Augmented Generation (RAG)</strong> is an AI framework that enhances Large Language Models (LLMs) by providing them with relevant external knowledge during generation. Instead of relying solely on pre-trained knowledge, RAG systems dynamically retrieve relevant documents to augment the generation process.</p>
+                
+                <div class="highlight">
+                    <h4>🔑 Key Benefits of RAG</h4>
+                    <p><strong>Up-to-date Information</strong> • <strong>Reduced Hallucinations</strong> • <strong>Domain-specific Knowledge</strong> • <strong>Transparent Sources</strong> • <strong>Cost-effective</strong></p>
+                </div>
+                
+                <h3>Why RAG Matters</h3>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h4>🚫 LLM Limitations</h4>
+                        <p>LLMs have knowledge cutoffs, can hallucinate, and lack domain-specific information</p>
+                    </div>
+                    <div class="card">
+                        <h4>💡 RAG Solution</h4>
+                        <p>Provides real-time, accurate, and relevant information from external knowledge bases</p>
+                    </div>
+                    <div class="card">
+                        <h4>🎯 Use Cases</h4>
+                        <p>Customer support, legal research, medical diagnosis, technical documentation, Q&A systems</p>
+                    </div>
+                </div>
+                
+                <h3>RAG vs Fine-tuning vs Prompting</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Approach</th>
+                            <th>Cost</th>
+                            <th>Update Frequency</th>
+                            <th>Domain Specificity</th>
+                            <th>Transparency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RAG</strong></td>
+                            <td>Low</td>
+                            <td>Real-time</td>
+                            <td>High</td>
+                            <td>High (citable sources)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fine-tuning</strong></td>
+                            <td>High</td>
+                            <td>Expensive retraining</td>
+                            <td>Very High</td>
+                            <td>Low (black box)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prompting</strong></td>
+                            <td>Very Low</td>
+                            <td>Immediate</td>
+                            <td>Low</td>
+                            <td>Medium</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <!-- Architecture -->
+            <section id="architecture" class="section">
+                <h2>🏗️ RAG Architecture Overview</h2>
+                
+                <div class="architecture">
+                    <div class="phase phase-indexing">
+                        <h3>📚 Phase 1: Indexing & Preparation</h3>
+                        <p><strong>Goal:</strong> Convert documents into searchable vector representations</p>
+                        
+                        <div class="cards-grid">
+                            <div class="card">
+                                <h4>Data Ingestion</h4>
+                                <p>Load documents from various sources (PDFs, websites, databases)</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">PyPDF2</span>
+                                    <span class="tech-badge">BeautifulSoup</span>
+                                    <span class="tech-badge">Unstructured</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Text Processing</h4>
+                                <p>Clean, normalize, and split documents into manageable chunks</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">LangChain</span>
+                                    <span class="tech-badge">NLTK</span>
+                                    <span class="tech-badge">spaCy</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Embedding Generation</h4>
+                                <p>Convert text chunks into dense vector representations</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">OpenAI</span>
+                                    <span class="tech-badge">Sentence-BERT</span>
+                                    <span class="tech-badge">Cohere</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Vector Storage</h4>
+                                <p>Store embeddings in specialized vector databases</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Weaviate</span>
+                                    <span class="tech-badge">Pinecone</span>
+                                    <span class="tech-badge">Qdrant</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-arrow">⬇️</div>
+                    
+                    <div class="phase phase-retrieval">
+                        <h3>🔍 Phase 2: Retrieval</h3>
+                        <p><strong>Goal:</strong> Find the most relevant documents for a given query</p>
+                        
+                        <div class="cards-grid">
+                            <div class="card">
+                                <h4>Query Processing</h4>
+                                <p>Clean and enhance the user query</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Query Expansion</span>
+                                    <span class="tech-badge">Intent Detection</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Semantic Search</h4>
+                                <p>Vector similarity search using ANN algorithms</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">HNSW</span>
+                                    <span class="tech-badge">Cosine Similarity</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Keyword Search</h4>
+                                <p>Traditional text-based search using BM25</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">BM25</span>
+                                    <span class="tech-badge">TF-IDF</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Hybrid Fusion</h4>
+                                <p>Combine semantic and keyword results</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">RRF</span>
+                                    <span class="tech-badge">Weighted Scoring</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Re-ranking</h4>
+                                <p>Refine results using cross-encoders</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Cross-Encoder</span>
+                                    <span class="tech-badge">ColBERT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-arrow">⬇️</div>
+                    
+                    <div class="phase phase-generation">
+                        <h3>🤖 Phase 3: Generation</h3>
+                        <p><strong>Goal:</strong> Generate contextual responses using retrieved documents</p>
+                        
+                        <div class="cards-grid">
+                            <div class="card">
+                                <h4>Prompt Engineering</h4>
+                                <p>Construct effective prompts with context</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Templates</span>
+                                    <span class="tech-badge">Context Window</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>LLM Generation</h4>
+                                <p>Generate responses using augmented knowledge</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">GPT-4</span>
+                                    <span class="tech-badge">Claude</span>
+                                    <span class="tech-badge">Llama</span>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h4>Post-processing</h4>
+                                <p>Add citations and safety checks</p>
+                                <div class="tech-stack">
+                                    <span class="tech-badge">Citations</span>
+                                    <span class="tech-badge">Guardrails</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Indexing -->
+            <section id="indexing" class="section">
+                <h2>📚 Indexing & Document Processing</h2>
+                
+                <h3>Document Chunking Strategies</h3>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h4>Fixed-size Chunking</h4>
+                        <p>Split documents into fixed token/character chunks</p>
+                        <p><strong>Pros:</strong> Simple, predictable<br>
+                        <strong>Cons:</strong> May break semantic units</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">512-1024 tokens</span>
+                            <span class="tech-badge">Overlap: 50-100</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Semantic Chunking</h4>
+                        <p>Split based on semantic boundaries (sentences, paragraphs)</p>
+                        <p><strong>Pros:</strong> Preserves meaning<br>
+                        <strong>Cons:</strong> Variable sizes</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Sentence-based</span>
+                            <span class="tech-badge">Topic modeling</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Hierarchical Chunking</h4>
+                        <p>Create nested chunks with different granularities</p>
+                        <p><strong>Pros:</strong> Multi-level context<br>
+                        <strong>Cons:</strong> Complex implementation</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Parent-child</span>
+                            <span class="tech-badge">Multi-scale</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Embedding Models</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Dimensions</th>
+                            <th>Performance</th>
+                            <th>Cost</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>OpenAI Ada-002</strong></td>
+                            <td>1536</td>
+                            <td>Excellent</td>
+                            <td>$$</td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sentence-BERT</strong></td>
+                            <td>768</td>
+                            <td>Good</td>
+                            <td>Free</td>
+                            <td>Open source projects</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cohere Embed</strong></td>
+                            <td>1024/4096</td>
+                            <td>Excellent</td>
+                            <td>$$</td>
+                            <td>Multilingual</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BGE-Large</strong></td>
+                            <td>1024</td>
+                            <td>Very Good</td>
+                            <td>Free</td>
+                            <td>Chinese + English</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Vector Database Indexing</h3>
+                <div class="code-block" data-lang="Python">
+# Weaviate Schema Definition
+schema = {
+    "class": "Document",
+    "vectorizer": "text2vec-openai",
+    "moduleConfig": {
+        "text2vec-openai": {
+            "model": "ada-002",
+            "modelVersion": "002",
+            "type": "text"
+        }
+    },
+    "properties": [
+        {
+            "name": "content",
+            "dataType": ["text"],
+            "description": "Document content"
+        },
+        {
+            "name": "source",
+            "dataType": ["string"],
+            "description": "Document source"
+        },
+        {
+            "name": "timestamp",
+            "dataType": ["date"],
+            "description": "Creation date"
+        }
+    ],
+    "vectorIndexConfig": {
+        "algorithm": "hnsw",
+        "ef": 200,
+        "efConstruction": 128,
+        "maxConnections": 64
+    }
+}
+
+client.schema.create_class(schema)
+                </div>
+                
+                <h3>HNSW Algorithm Deep Dive</h3>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h4>Hierarchical Structure</h4>
+                        <p>Multi-layer graph with decreasing node density per layer</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Layer 0: All nodes</span>
+                            <span class="tech-badge">Higher layers: Sparse</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Small World Property</h4>
+                        <p>Short paths between any two nodes in the graph</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Fast navigation</span>
+                            <span class="tech-badge">Log complexity</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Key Parameters</h4>
+                        <p>Tunable parameters for performance optimization</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">M: connections</span>
+                            <span class="tech-badge">ef: search quality</span>
+                            <span class="tech-badge">efConstruction: build</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Retriever -->
+            <section id="retriever" class="section">
+                <h2>🎯 Retriever Architecture</h2>
+                
+                <h3>Search Architectures Comparison</h3>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h4>Bi-encoder (Standard)</h4>
+                        <p>Separate embedding of query and documents</p>
+                        <p><strong>Speed:</strong> Fast ⚡⚡⚡<br>
+                        <strong>Quality:</strong> Good ⭐⭐⭐<br>
+                        <strong>Storage:</strong> Efficient 💾</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Pre-computed</span>
+                            <span class="tech-badge">ANN search</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Cross-encoder</h4>
+                        <p>Joint processing of query-document pairs</p>
+                        <p><strong>Speed:</strong> Slow ⚡<br>
+                        <strong>Quality:</strong> Excellent ⭐⭐⭐⭐⭐<br>
+                        <strong>Storage:</strong> Efficient 💾💾</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Real-time</span
